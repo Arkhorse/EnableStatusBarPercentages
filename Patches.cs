@@ -1,18 +1,21 @@
 ﻿using HarmonyLib;
+using Il2Cpp;
 using UnityEngine;
 
 internal static class Patches {
 
-	[HarmonyPatch(typeof(Panel_FirstAid), "Enable")]
-	private static class EnableStatusBarPercentages {
+	[HarmonyPatch(typeof(Panel_FirstAid), nameof(Panel_FirstAid.Enable))]
+	private static class Panel_FirstAid_Enable
+    {
 
-		private static readonly Vector3 containerOffset = new Vector3(10, 5);
-		private static readonly Vector3 statusLabelOffset = new Vector3(-72, -8);
-		private static readonly Vector3 conditionLabelOffset = new Vector3(72, -10.5f);
+		private static readonly Vector3 containerOffset			= new Vector3(10, 5);
+		private static readonly Vector3 statusLabelOffset		= new Vector3(-72, -8);
+		private static readonly Vector3 conditionLabelOffset	= new Vector3(72, -10.5f);
 
 		private static bool initialized = false;
 
-		private static void Prefix(Panel_FirstAid __instance) {
+		private static void Prefix(Panel_FirstAid __instance)
+		{
 			if (initialized) return;
 			initialized = true;
 
@@ -29,12 +32,14 @@ internal static class Patches {
 			ActivateAndMoveConditionLabel(__instance.m_LabelConditionPercent);
 		}
 
-		private static void CenterStatusLabel(UILabel label) {
+		private static void CenterStatusLabel(UILabel label)
+		{
 			label.alignment = NGUIText.Alignment.Center;
 			label.transform.localPosition += new Vector3(-label.width / 2, 0) + containerOffset;
 		}
 
-		private static void ActivateAndMovePercentLabel(UILabel label) {
+		private static void ActivateAndMovePercentLabel(UILabel label)
+		{
 			label.alignment = NGUIText.Alignment.Left;
 			label.transform.localPosition += statusLabelOffset + containerOffset;
 			label.fontSize = 14;
@@ -43,7 +48,8 @@ internal static class Patches {
 			NGUITools.SetActive(label.gameObject, true);
 		}
 
-		private static void ActivateAndMoveConditionLabel(UILabel label) {
+		private static void ActivateAndMoveConditionLabel(UILabel label)
+		{
 			label.pivot = UIWidget.Pivot.Left;
 			label.gameObject.transform.localPosition += conditionLabelOffset;
 
@@ -52,17 +58,18 @@ internal static class Patches {
 		}
 	}
 
-	[HarmonyPatch(typeof(WellFed), "Update")]
-	private static class MoveConditionLabelWhenWellFed {
+	[HarmonyPatch(typeof(WellFed), nameof(WellFed.Update))]
+	private static class MoveConditionLabelWhenWellFed
+	{
+		private static readonly Vector3 wellFedOffset	= new Vector3(22, 0);
+		private static bool wellFedActive				= false;
 
-		private static readonly Vector3 wellFedOffset = new Vector3(22, 0);
-		private static bool wellFedActive = false;
-
-		private static void Postfix(WellFed __instance) {
+		private static void Postfix(WellFed __instance)
+		{
 			bool newActive = __instance.HasWellFed() && __instance.m_MaxConditionBonusPercent > 0f;
 			if (newActive == wellFedActive) return;
 
-			Transform labelTransform = InterfaceManager.m_Panel_FirstAid.m_LabelConditionPercent.transform;
+			Transform labelTransform = InterfaceManager.GetPanel<Panel_FirstAid>().m_LabelConditionPercent.transform;
 			float moveDirection = newActive ? +1 : -1;
 			labelTransform.localPosition += moveDirection * wellFedOffset;
 
